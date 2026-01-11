@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 /**
+ * 🔴 Required for Multer to work on Vercel serverless
  */
 export const config = {
   api: {
@@ -11,12 +12,10 @@ export const config = {
   },
 };
 
-
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
-
 
 const analysisSchema = z.object({
   disease: z.string(),
@@ -25,7 +24,6 @@ const analysisSchema = z.object({
   prevention: z.string(),
   confidence: z.enum(['High', 'Medium', 'Low']),
 });
-
 
 function buildPrompt() {
   return `
@@ -60,33 +58,31 @@ Do not guess plant species unless visually obvious. Do not imply lab confirmatio
 `.trim();
 }
 
-
 export default function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-
   upload.single('file')(req, res, async (err) => {
     try {
       if (err) throw err;
 
-      // Check API key
       if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: 'Missing GEMINI_API_KEY' });
       }
 
-      // Validate file
       if (!req.file) {
         return res.status(400).json({ error: 'No image uploaded' });
       }
+
       if (!req.file.mimetype.startsWith('image/')) {
         return res.status(400).json({ error: 'File must be an image' });
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+      });
 
-    
       const imagePart = {
         inlineData: {
           data: req.file.buffer.toString('base64'),
@@ -94,7 +90,6 @@ export default function handler(req, res) {
         },
       };
 
-     
       const response = await ai.models.generateContent({
         model: 'gemini-1.5-flash',
         contents: [
@@ -109,7 +104,6 @@ export default function handler(req, res) {
         },
       });
 
-     
       let parsed;
       try {
         parsed = JSON.parse(response.text);
@@ -120,7 +114,6 @@ export default function handler(req, res) {
         });
       }
 
-    
       const validated = analysisSchema.parse(parsed);
 
       res.status(200).json({
