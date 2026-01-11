@@ -305,7 +305,8 @@ analyzeBtn.addEventListener("click", async () => {
   formData.append("file", file);
 
   try {
-    const apiUrl = "http://localhost:3000/analyze";
+   
+    const apiUrl = "/api/analyze";
     const response = await fetch(apiUrl, {
       method: "POST",
       body: formData,
@@ -395,4 +396,5 @@ window.addEventListener("load", async () => {
 
 </body>
 </html>
+
 
