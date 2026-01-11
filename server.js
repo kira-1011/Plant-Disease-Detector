@@ -3,16 +3,10 @@ const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
-
-// ✅ switch SDK to @google/genai for structured outputs
 const { GoogleGenAI } = require('@google/genai');
-
-// ✅ schema tools
 const { z } = require('zod');
 const { zodToJsonSchema } = require('zod-to-json-schema');
-
 const app = express();
-
 app.use(
   cors({
     origin: '*',
@@ -27,8 +21,6 @@ if (!process.env.GEMINI_API_KEY) {
   console.error('❌ Missing GEMINI_API_KEY in .env');
   process.exit(1);
 }
-
-// ✅ new client
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const upload = multer({
@@ -39,8 +31,6 @@ const upload = multer({
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'plant.html'));
 });
-
-// ✅ keep SAME fields only
 const analysisSchema = z.object({
   disease: z
     .string()
@@ -52,8 +42,6 @@ const analysisSchema = z.object({
   prevention: z.string().describe('Prevention tips.'),
   confidence: z.enum(['High', 'Medium', 'Low']).describe('Confidence level.'),
 });
-
-// ✅ improved prompt but still aligned to your current fields
 function buildPrompt() {
   return `
 You are an expert botanist and plant pathologist.
@@ -103,8 +91,6 @@ app.post('/analyze', upload.single('file'), async (req, res) => {
         mimeType: req.file.mimetype,
       },
     };
-
-    // ✅ generate JSON constrained by schema
     const response = await ai.models.generateContent({
      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: buildPrompt() }, imagePart] }],
@@ -115,8 +101,6 @@ app.post('/analyze', upload.single('file'), async (req, res) => {
     });
 
     const structured = JSON.parse(response.text);
-
-    // ✅ validate to be safe
     const validated = analysisSchema.parse(structured);
 
     res.json({
@@ -142,3 +126,4 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
   console.log(`📸 Test endpoint: http://localhost:${PORT}/test`);
 });
+
