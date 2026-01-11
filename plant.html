@@ -14,7 +14,6 @@ body {
   padding:20px;
 }
 
-/* ---------- Header Container ---------- */
 .header-container {
   max-width:420px;
   margin:0 auto 20px auto;
@@ -53,7 +52,6 @@ body {
 
 .hidden { display:none; }
 
-/* ---------- Container ---------- */
 .container {
   background:#fff;
   max-width:420px;
@@ -66,7 +64,7 @@ body {
 h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
 .subtitle { text-align:center; font-size:14px; color:#555; margin-bottom:20px; }
 
-/* ---------- Upload ---------- */
+
 .upload-box {
   border:2px dashed #a5d6a7;
   padding:20px;
@@ -103,7 +101,7 @@ h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
   display:none;
 }
 
-/* ---------- Button ---------- */
+
 .analyze-btn {
   width:100%;
   padding:15px;
@@ -132,7 +130,7 @@ h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
   margin-top:15px;
 }
 
-/* ---------- Footer ---------- */
+
 .footer-container {
   max-width:420px;
   margin:30px auto 0 auto;
@@ -170,7 +168,7 @@ h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
 </head>
 
 <body>
-<!-- Header with Logo and Sign Up Button -->
+
 <div class="header-container">
   <div class="header-logo">
     <span>🌱</span> Plant Disease Detector
@@ -207,7 +205,7 @@ h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
   </p>
 </div>
 
-<!-- Footer with Information -->
+
 <div class="footer-container">
   <div class="footer-content">
     <h3>About Plant Disease Detector</h3>
@@ -221,7 +219,7 @@ h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
 </div>
 
 <script>
-// 1. ELEMENTS
+
 const signupBtn = document.getElementById("signupBtn");
 const accountBtn = document.getElementById("accountBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -233,7 +231,7 @@ const uploadText = document.getElementById("uploadText");
 const analyzeBtn = document.querySelector(".analyze-btn");
 const resultBox = document.querySelector(".result-box");
 
-// 2. AUTH LOGIC
+
 const userData = JSON.parse(localStorage.getItem("userAccount"));
 
 if (userData) {
@@ -246,7 +244,7 @@ if (userData) {
   welcomeText.textContent = `Welcome, ${displayName}! 🌱`;
 }
 
-// 3. NAVIGATION & LOGOUT
+
 function goSignup() {
   window.location.href = "signup1.html";
 }
@@ -257,7 +255,7 @@ function logout() {
   location.reload();
 }
 
-// 4. IMAGE PREVIEW & VALIDATION
+
 cameraInput.addEventListener("change", () => {
   const file = cameraInput.files[0];
   if (!file) return;
@@ -285,7 +283,7 @@ cameraInput.addEventListener("change", () => {
     '<h3>Analysis Result</h3><p>Upload complete. Click "Analyze Plant" to start analysis.</p>';
 });
 
-// 5. ANALYZE FUNCTION (SERVER SEND)
+
 analyzeBtn.addEventListener("click", async () => {
   const file = cameraInput.files[0];
   if (!file) {
@@ -354,7 +352,7 @@ analyzeBtn.addEventListener("click", async () => {
   }
 });
 
-// 6. HISTORY LOGIC
+
 function saveScan(diseaseName) {
   const scan = {
     image: cameraInput.files[0].name,
@@ -382,7 +380,7 @@ function showAccount() {
   );
 }
 
-// 7. SERVER TEST ON LOAD
+
 window.addEventListener("load", async () => {
   try {
     const testResponse = await fetch("http://localhost:3000/test");
@@ -397,3 +395,4 @@ window.addEventListener("load", async () => {
 
 </body>
 </html>
+
