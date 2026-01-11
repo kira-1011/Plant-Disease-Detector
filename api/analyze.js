@@ -1,4 +1,3 @@
-// api/analyze.js
 import express from "express";
 import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
@@ -7,13 +6,11 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 const router = express.Router();
 
-// Multer setup (memory storage)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-// Zod schema for AI response
 const analysisSchema = z.object({
   disease: z.string(),
   symptoms: z.string(),
@@ -22,7 +19,6 @@ const analysisSchema = z.object({
   confidence: z.enum(["High", "Medium", "Low"]),
 });
 
-// AI prompt builder
 function buildPrompt() {
   return `
 You are an expert botanist and plant pathologist.
@@ -56,7 +52,6 @@ Do not guess plant species unless visually obvious. Do not imply lab confirmatio
 `.trim();
 }
 
-// POST /api/analyze  (and also works if mounted as /analyze)
 router.post("/analyze", upload.single("file"), async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
