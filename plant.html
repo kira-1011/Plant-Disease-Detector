@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Plant Disease Detector</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family: Arial, Helvetica, sans-serif; }
+
+body {
+  background: linear-gradient(135deg, #d0f0c0, #a8e6a3);
+  min-height:100vh;
+  padding:20px;
+}
+
+/* ---------- Header Container ---------- */
+.header-container {
+  max-width:420px;
+  margin:0 auto 20px auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f1f8f4;
+  color: #2e7d32;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-btn {
+  padding:8px 16px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#43a047,#66bb6a);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(0,0,0,0.15);
+  transition:0.3s;
+  font-size: 14px;
+}
+
+.top-btn:hover { transform:scale(1.05); }
+
+.hidden { display:none; }
+
+/* ---------- Container ---------- */
+.container {
+  background:#fff;
+  max-width:420px;
+  margin:auto;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.2);
+}
+
+h1 { text-align:center; color:#2e7d32; margin-bottom:10px; }
+.subtitle { text-align:center; font-size:14px; color:#555; margin-bottom:20px; }
+
+/* ---------- Upload ---------- */
+.upload-box {
+  border:2px dashed #a5d6a7;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  margin-bottom:20px;
+  position: relative;
+}
+
+.upload-box:hover { background:#f0fff0; }
+
+.upload-box span {
+  display:block;
+  font-size:14px;
+  color:#555;
+  margin-top:10px;
+}
+
+.image-preview {
+  height:200px;
+  border-radius:15px;
+  border:1px solid #ddd;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f6faf6;
+}
+
+.image-preview img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:none;
+}
+
+/* ---------- Button ---------- */
+.analyze-btn {
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:15px;
+  background:linear-gradient(90deg,#43a047,#66bb6a);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.analyze-btn:hover { transform:scale(1.03); }
+
+.result-box {
+  background:#f1f8f4;
+  padding:15px;
+  border-radius:15px;
+  margin-top:20px;
+}
+
+.disclaimer {
+  font-size:12px;
+  color:#888;
+  text-align:center;
+  margin-top:15px;
+}
+
+/* ---------- Footer ---------- */
+.footer-container {
+  max-width:420px;
+  margin:30px auto 0 auto;
+  padding:20px;
+  background-color:#f1f8f4;
+  border-radius:15px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
+  text-align:center;
+  color:#2e7d32;
+}
+
+.footer-content h3 {
+  margin-bottom:10px;
+  font-size:16px;
+}
+
+.footer-content p {
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:10px;
+  color:#555;
+}
+
+.tech-badge {
+  display:inline-block;
+  background:linear-gradient(90deg,#4285f4,#34a853);
+  color:white;
+  padding:5px 12px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<!-- Header with Logo and Sign Up Button -->
+<div class="header-container">
+  <div class="header-logo">
+    <span>🌱</span> Plant Disease Detector
+  </div>
+  <div>
+    <button id="signupBtn" class="top-btn" onclick="goSignup()">Sign Up</button>
+    <button id="accountBtn" class="top-btn hidden" onclick="showAccount()">My Account</button>
+    <button id="logoutBtn" class="top-btn hidden" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+  <h1>Detect Diseases</h1>
+  <p class="subtitle" id="welcomeText">Upload a leaf image to detect possible diseases</p>
+
+  <div class="upload-box">
+    <input type="file" accept="image/*" id="cameraInput">
+    <span id="uploadText">Upload a photo of your plant leaf here 🌱</span>
+  </div>
+
+  <div class="image-preview">
+    <span id="placeholder">Leaf preview here</span>
+    <img id="preview">
+  </div>
+
+  <button class="analyze-btn" onclick="saveScan()">Analyze Plant</button>
+
+  <div class="result-box">
+    <strong>Result:</strong>🌿
+  </div>
+
+  <p class="disclaimer">
+    ⚠️ This tool provides guidance only and does not replace agricultural experts.
+  </p>
+</div>
+
+<!-- Footer with Information -->
+<div class="footer-container">
+  <div class="footer-content">
+    <h3>About Plant Disease Detector</h3>
+    <p>This tool helps farmers and gardeners identify plant diseases quickly and accurately using advanced AI technology.</p>
+    <p>Simply upload a photo of a plant leaf, and our system will analyze it for common diseases and provide treatment recommendations.</p>
+    <div class="tech-badge">Powered by Gemini AI</div>
+    <p style="margin-top:15px; font-size:12px; color:#777;">
+      🌱 Plant Disease Detector by Eden Mersha & Meaza Raswork &copy; 2026. All rights reserved.
+    </p>
+  </div>
+</div>
+
+<script>
+// 1. ELEMENTS
+const signupBtn = document.getElementById("signupBtn");
+const accountBtn = document.getElementById("accountBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const welcomeText = document.getElementById("welcomeText");
+const cameraInput = document.getElementById("cameraInput");
+const preview = document.getElementById("preview");
+const placeholder = document.getElementById("placeholder");
+const uploadText = document.getElementById("uploadText");
+const analyzeBtn = document.querySelector(".analyze-btn");
+const resultBox = document.querySelector(".result-box");
+
+// 2. AUTH LOGIC
+const userData = JSON.parse(localStorage.getItem("userAccount"));
+
+if (userData) {
+  const displayName =
+    userData.name || userData.username || userData.fullname || "User";
+
+  signupBtn.classList.add("hidden");
+  accountBtn.classList.remove("hidden");
+  logoutBtn.classList.remove("hidden");
+  welcomeText.textContent = `Welcome, ${displayName}! 🌱`;
+}
+
+// 3. NAVIGATION & LOGOUT
+function goSignup() {
+  window.location.href = "signup1.html";
+}
+
+function logout() {
+  localStorage.removeItem("userAccount");
+  localStorage.removeItem("scanHistory");
+  location.reload();
+}
+
+// 4. IMAGE PREVIEW & VALIDATION
+cameraInput.addEventListener("change", () => {
+  const file = cameraInput.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please select an image file (JPG, PNG)");
+    cameraInput.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Image size should be less than 5MB");
+    cameraInput.value = "";
+    return;
+  }
+
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+  preview.style.opacity = 1;
+
+  if (placeholder) placeholder.style.display = "none";
+  if (uploadText) uploadText.style.display = "none"; // <-- hide upload text after selecting file
+
+  resultBox.innerHTML =
+    '<h3>Analysis Result</h3><p>Upload complete. Click "Analyze Plant" to start analysis.</p>';
+});
+
+// 5. ANALYZE FUNCTION (SERVER SEND)
+analyzeBtn.addEventListener("click", async () => {
+  const file = cameraInput.files[0];
+  if (!file) {
+    alert("Please select a leaf image first! 🌿");
+    return;
+  }
+
+  if (!userData) {
+    alert("Please sign up or login first to analyze plants.");
+    return;
+  }
+
+  analyzeBtn.disabled = true;
+  const originalText = analyzeBtn.innerText;
+  analyzeBtn.innerText = "🔍 Analyzing...";
+  analyzeBtn.style.opacity = "0.7";
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const apiUrl = "http://localhost:3000/analyze";
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      resultBox.innerHTML = `
+        <h3>🌿 Plant Analysis Results</h3>
+        <p><strong>Disease:</strong> ${data.structured.disease || "Not specified"}</p>
+        <p><strong>Symptoms:</strong> ${data.structured.symptoms || "Not specified"}</p>
+        <p><strong>Treatment:</strong> ${data.structured.treatment || "Not specified"}</p>
+        <p><strong>Prevention:</strong> ${data.structured.prevention || "Not specified"}</p>
+        <p><strong>Confidence:</strong> ${data.structured.confidence || "Not specified"}</p>
+        <hr style="margin: 10px 0; border: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #666;">
+          Analysis complete at ${new Date().toLocaleTimeString()}
+        </p>
+      `;
+
+      saveScan(data.structured.disease || "Completed Analysis");
+    } else {
+      resultBox.innerHTML = `<h3>⚠️ Error</h3><p>${data.error || "Analysis failed"}</p>`;
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    if (error.message.includes("Failed to fetch")) {
+      resultBox.innerHTML = `
+        <h3>⚠️ Connection Error</h3>
+        <p>Cannot connect to the server. Ensure <code>node server.js</code> is running.</p>
+      `;
+    } else {
+      resultBox.innerHTML = `<h3>⚠️ Error</h3><p>${error.message}</p>`;
+    }
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.innerText = originalText;
+    analyzeBtn.style.opacity = "1";
+  }
+});
+
+// 6. HISTORY LOGIC
+function saveScan(diseaseName) {
+  const scan = {
+    image: cameraInput.files[0].name,
+    date: new Date().toLocaleString(),
+    result: diseaseName,
+  };
+
+  const history = JSON.parse(localStorage.getItem("scanHistory")) || [];
+  history.push(scan);
+  localStorage.setItem("scanHistory", JSON.stringify(history));
+}
+
+function showAccount() {
+  if (!userData) return;
+
+  const history = JSON.parse(localStorage.getItem("scanHistory")) || [];
+  const historyText = history.length
+    ? history.map((s, i) => `${i + 1}. ${s.result} (${s.date})`).join("\n")
+    : "No recent scans.";
+
+  alert(
+    `👤 Name: ${userData.name || "User"}\n📧 Email: ${
+      userData.email || "N/A"
+    }\n\n📸 History:\n${historyText}`
+  );
+}
+
+// 7. SERVER TEST ON LOAD
+window.addEventListener("load", async () => {
+  try {
+    const testResponse = await fetch("http://localhost:3000/test");
+    if (testResponse.ok) {
+      console.log("✅ Server connection test passed");
+    }
+  } catch (error) {
+    console.warn("⚠️ Server may not be running:", error.message);
+  }
+});
+</script>
+
+</body>
+</html>
