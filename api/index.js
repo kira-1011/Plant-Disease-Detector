@@ -4,6 +4,12 @@ import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -54,6 +60,11 @@ Content guidelines:
 Do not guess plant species unless visually obvious. Do not imply lab confirmation.
 `.trim();
 }
+
+app.get("/", (req, res) => {
+  const html = readFileSync(join(__dirname, "..", "public", "index.html"), "utf8");
+  res.type("html").send(html);
+});
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ ok: true });
