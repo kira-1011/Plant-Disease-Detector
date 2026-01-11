@@ -1,16 +1,11 @@
-import multer from 'multer';
-import { GoogleGenAI } from '@google/genai';
-import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+// api/analyze.js
+import express from "express";
+import multer from "multer";
+import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
-/**
- * Required for Multer to work on Vercel serverless
- */
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+const router = express.Router();
 
 // Multer setup (memory storage)
 const upload = multer({
@@ -24,7 +19,7 @@ const analysisSchema = z.object({
   symptoms: z.string(),
   treatment: z.string(),
   prevention: z.string(),
-  confidence: z.enum(['High', 'Medium', 'Low']),
+  confidence: z.enum(["High", "Medium", "Low"]),
 });
 
 // AI prompt builder
@@ -44,7 +39,7 @@ Decision rules:
   - confidence = "Low"
 - If no abnormal patterns are clearly visible:
   - Set disease = "Healthy"
-  - confidence: 
+  - confidence:
     - High = clear image + classic visual pattern
     - Medium = some evidence but could be multiple causes
     - Low = unclear image or many plausible causes
@@ -61,52 +56,35 @@ Do not guess plant species unless visually obvious. Do not imply lab confirmatio
 `.trim();
 }
 
-// Wrap Multer in a Promise for async/await
-const multerPromise = (req, res) =>
-  new Promise((resolve, reject) => {
-    upload.single('file')(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-
-// Main API handler
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// POST /api/analyze  (and also works if mounted as /analyze)
+router.post("/analyze", upload.single("file"), async (req, res) => {
   try {
-    await multerPromise(req, res);
-
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'Missing GEMINI_API_KEY' });
+      return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: 'No image uploaded' });
+      return res.status(400).json({ error: "No image uploaded" });
     }
 
-    if (!req.file.mimetype.startsWith('image/')) {
-      return res.status(400).json({ error: 'File must be an image' });
+    if (!req.file.mimetype?.startsWith("image/")) {
+      return res.status(400).json({ error: "File must be an image" });
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const imagePart = {
       inlineData: {
-        data: req.file.buffer.toString('base64'),
+        data: req.file.buffer.toString("base64"),
         mimeType: req.file.mimetype,
       },
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: [
-        { role: 'user', parts: [{ text: buildPrompt() }, imagePart] }
-      ],
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: buildPrompt() }, imagePart] }],
       config: {
-        responseMimeType: 'application/json',
+        responseMimeType: "application/json",
         responseJsonSchema: zodToJsonSchema(analysisSchema),
       },
     });
@@ -114,9 +92,9 @@ export default async function handler(req, res) {
     let parsed;
     try {
       parsed = JSON.parse(response.text);
-    } catch (err) {
+    } catch {
       return res.status(500).json({
-        error: 'Gemini returned invalid JSON',
+        error: "Gemini returned invalid JSON",
         raw: response.text,
       });
     }
@@ -127,11 +105,12 @@ export default async function handler(req, res) {
       success: true,
       structured: validated,
     });
-
   } catch (error) {
     return res.status(500).json({
-      error: 'Analysis failed',
-      details: error.message,
+      error: "Analysis failed",
+      details: error?.message || String(error),
     });
   }
-}
+});
+
+export default router;
