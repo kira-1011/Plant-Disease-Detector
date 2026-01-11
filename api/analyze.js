@@ -12,11 +12,13 @@ export const config = {
   },
 };
 
+// Multer setup for serverless (memory storage)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
 
+// Zod schema for AI response
 const analysisSchema = z.object({
   disease: z.string(),
   symptoms: z.string(),
@@ -25,6 +27,7 @@ const analysisSchema = z.object({
   confidence: z.enum(['High', 'Medium', 'Low']),
 });
 
+// Build AI prompt
 function buildPrompt() {
   return `
 You are an expert botanist and plant pathologist.
@@ -58,76 +61,88 @@ Do not guess plant species unless visually obvious. Do not imply lab confirmatio
 `.trim();
 }
 
-export default function handler(req, res) {
+// Wrap Multer in a Promise for async/await
+const multerPromise = (req, res) =>
+  new Promise((resolve, reject) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+// Main API handler
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  upload.single('file')(req, res, async (err) => {
+  try {
+    // Handle file upload
+    await multerPromise(req, res);
+
+    // Check environment variable
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Missing GEMINI_API_KEY' });
+    }
+
+    // Validate uploaded file
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image uploaded' });
+    }
+    if (!req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: 'File must be an image' });
+    }
+
+    // Initialize Gemini AI
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    // Prepare image data
+    const imagePart = {
+      inlineData: {
+        data: req.file.buffer.toString('base64'),
+        mimeType: req.file.mimetype,
+      },
+    };
+
+    // Call Gemini AI
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: buildPrompt() }, imagePart],
+        },
+      ],
+      config: {
+        responseMimeType: 'application/json',
+        responseJsonSchema: zodToJsonSchema(analysisSchema),
+      },
+    });
+
+    // Parse and validate JSON
+    let parsed;
     try {
-      if (err) throw err;
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({ error: 'Missing GEMINI_API_KEY' });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ error: 'No image uploaded' });
-      }
-
-      if (!req.file.mimetype.startsWith('image/')) {
-        return res.status(400).json({ error: 'File must be an image' });
-      }
-
-      const ai = new GoogleGenAI({
-        apiKey: process.env.GEMINI_API_KEY,
-      });
-
-      const imagePart = {
-        inlineData: {
-          data: req.file.buffer.toString('base64'),
-          mimeType: req.file.mimetype,
-        },
-      };
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: buildPrompt() }, imagePart],
-          },
-        ],
-        config: {
-          responseMimeType: 'application/json',
-          responseJsonSchema: zodToJsonSchema(analysisSchema),
-        },
-      });
-
-      let parsed;
-      try {
-        parsed = JSON.parse(response.text);
-      } catch {
-        return res.status(500).json({
-          error: 'Gemini returned invalid JSON',
-          raw: response.text,
-        });
-      }
-
-      const validated = analysisSchema.parse(parsed);
-
-      res.status(200).json({
-        success: true,
-        structured: validated,
-      });
-    } catch (error) {
-      console.error('Server error:', error);
-      res.status(500).json({
-        error: 'Analysis failed',
-        details: error.message,
+      parsed = JSON.parse(response.text);
+    } catch (err) {
+      console.error('Invalid JSON from Gemini:', response.text);
+      return res.status(500).json({
+        error: 'Gemini returned invalid JSON',
+        raw: response.text,
       });
     }
-  });
-}
-// Trigger redeploy
 
+    const validated = analysisSchema.parse(parsed);
+
+    // Return successful response
+    return res.status(200).json({
+      success: true,
+      structured: validated,
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    return res.status(500).json({
+      error: 'Analysis failed',
+      details: error.message,
+    });
+  }
+}
