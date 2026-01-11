@@ -384,7 +384,7 @@ function showAccount() {
 
 window.addEventListener("load", async () => {
   try {
-    const testResponse = await fetch("http://localhost:3000/test");
+    const testResponse = await fetch("/test");
     if (testResponse.ok) {
       console.log("✅ Server connection test passed");
     }
@@ -396,5 +396,6 @@ window.addEventListener("load", async () => {
 
 </body>
 </html>
+
 
 
