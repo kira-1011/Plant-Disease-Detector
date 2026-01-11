@@ -105,7 +105,7 @@ app.post('/analyze', upload.single('file'), async (req, res) => {
 
    
     const response = await ai.models.generateContent({
-     model: 'gemini-2.5-flash',
+     model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: buildPrompt() }, imagePart] }],
       config: {
         responseMimeType: 'application/json',
@@ -136,8 +136,4 @@ app.get('/test', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📸 Test endpoint: http://localhost:${PORT}/test`);
-});
+module.exports = app;
